@@ -1,0 +1,1 @@
+DeParty - DeParty is a token-gated, real-time voice chat platform that turns community conversations into governed, monetizable experiences. Built on Solana and MagicBlock’s ephemeral rollups, it combines the spontaneity of Discord with the financial incentives and transparency of DAOs.
