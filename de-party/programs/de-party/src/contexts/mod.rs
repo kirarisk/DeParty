@@ -1,3 +1,4 @@
+pub mod setup;
 pub mod init;
 pub mod create;
 pub mod join;
@@ -7,7 +8,9 @@ pub mod poll;
 pub mod unmute;
 pub mod vote;
 pub mod close;
+pub mod end;
 
+pub use setup::*;
 pub use init::*;
 pub use create::*;
 pub use join::*;
@@ -17,3 +20,4 @@ pub use poll::*;
 pub use unmute::*;
 pub use vote::*;
 pub use close::*;
+pub use end::*;
