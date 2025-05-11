@@ -3,8 +3,11 @@ use anchor_spl::token::{Mint, TokenAccount};
 use crate::states::{Party,Config,Profile};
 use anchor_lang::solana_program::clock::Clock;
 use crate::errors::CustomError;
+use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
+use ephemeral_rollups_sdk::cpi::{delegate_account, DelegateConfig};
+use ephemeral_rollups_sdk::ephem::{commit_accounts, commit_and_undelegate_accounts};
 
-
+// #[delegate]
 #[derive(Accounts)]
 #[instruction(name: String, description: String, min_holdings: u64,capacity: u8)]
 pub struct CreateParty<'info> {
@@ -14,9 +17,10 @@ pub struct CreateParty<'info> {
     pub mint: Account<'info, Mint>,
 
     pub token_account: Account<'info, TokenAccount>,
-
+    /// CHECK The pda to delegate
     #[account(
         init,
+        // del,
         payer = user,
         space = Party::LEN,
         seeds = [b"party", user.key().as_ref(), mint.key().as_ref()],
@@ -43,6 +47,7 @@ pub struct CreateParty<'info> {
     pub system_program: Program<'info, System>,
 }
 
+
 impl<'info> CreateParty<'info> {
     pub fn create_party(&mut self, name: String, description: String, min_holdings: u64, bumps: &CreatePartyBumps,capacity: u8) -> Result<()> {
         require!(min_holdings <= self.token_account.amount, CustomError::InvalidMinHoldings);
@@ -59,18 +64,24 @@ impl<'info> CreateParty<'info> {
                     ),
                     self.config.party_fee
                 )?;
-        
+
+                
         self.party.set_inner(Party {
             mint: self.mint.key().clone(),
             creator: self.user.key().clone(),
             created_at: Clock::get()?.unix_timestamp,
-            members: Box::new(vec![self.user.key()]),
+            members: Box::new(vec![]),
             tokens_required: min_holdings,
             bump: bumps.party,
             name,
             description,
             capacity,
         });
+        // self.delegate_party(
+        //     &self.user,
+        //     &[b"party", self.user.key().as_ref(), self.mint.key().as_ref()],
+        //     DelegateConfig::default(),
+        // )?;
         Ok(())
     }
 }

@@ -1,6 +1,5 @@
-use anchor_lang::{prelude::*, system_program};
-use crate::states::{Poll, Config, Party};
-use crate::contexts::{mute::Mute,kick::Kick,end_poll::EndPoll};
+use anchor_lang::prelude::*;
+use crate::states::{Poll, Config, Party, Profile};
 use crate::errors::CustomError;
 
 
@@ -18,22 +17,26 @@ pub struct Vote<'info> {
     #[account(mut)]
     /// CHECK: This is the program's treasury account
     pub treasury: SystemAccount<'info>,
+    #[account(
+        seeds = [b"profile",voter.key().as_ref()],
+        bump = profile.bump,
+    )]
+    pub profile: Account<'info, Profile>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> Vote<'info> {
     pub fn vote(&mut self, option_index: u8) -> Result<()> {
+        require!(self.poll.voted.iter().all(|voted| voted != &self.profile.key()), CustomError::AlreadyVoted);
+        require!(self.party.members.contains(&self.profile.key()), CustomError::NotPartyMember);
+        self.poll.voted.push(self.profile.key());
         self.poll.votes[option_index as usize]+=1;
         self.poll.total_votes+=1;
         let votes_required:u8 = (self.party.members.len() as f32 * (self.config.vote_consensus as f32 / 100.0)).ceil() as u8;
         match self.poll.poll_type {
             0 => {
                 if self.poll.votes[option_index as usize] >= votes_required {
-                    let mut mute_ctx = Mute {
-                        user: self.voter.clone(),
-                        poll: self.poll.clone(),
-                    };
-                    mute_ctx.mute()?;
+                    msg!("Mute {}", self.poll.target.unwrap());
                     self.poll.close(self.treasury.to_account_info())?;
                     Ok(())
                 } else {

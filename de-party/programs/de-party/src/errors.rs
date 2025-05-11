@@ -20,5 +20,7 @@ pub enum CustomError {
     NotPartyMember,
     #[msg("Invalid poll type")]
     InvalidPollType,
+    #[msg("Already voted")]
+    AlreadyVoted,
 }
 

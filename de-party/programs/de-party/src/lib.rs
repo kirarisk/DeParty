@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use ephemeral_rollups_sdk::anchor::ephemeral;
 pub mod states;
 pub mod contexts;
 pub mod errors;
@@ -8,6 +9,7 @@ pub use errors::*;
 
 declare_id!("BsyqwwzW4gxZ74epwgGuc3N1qsjg67zsZXyLmYodMLGv");
 
+#[ephemeral]
 #[program]
 pub mod de_party {
     use super::*;
@@ -32,19 +34,9 @@ pub mod de_party {
     pub fn vote(ctx: Context<Vote>, option_index: u8)-> Result<()>{
         ctx.accounts.vote(option_index)
     }
-    pub fn end_poll(ctx: Context<EndPoll>)-> Result<()>{
-        ctx.accounts.end_poll()
-    }
     pub fn end_party(ctx: Context<EndParty>)-> Result<()>{
         ctx.accounts.end_party()
     }
-    pub fn kick(ctx: Context<Kick>)-> Result<()>{
-        ctx.accounts.kick()
-    }
-    pub fn mute(ctx: Context<Mute>)-> Result<()>{
-        ctx.accounts.mute()
-    }
-    
 }
 
 

@@ -3,6 +3,7 @@ import { BN, Program } from "@coral-xyz/anchor";
 import { DeParty } from "../target/types/de_party";
 import { LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, Transaction } from "@solana/web3.js";
 import { createMint,createTransferInstruction,getOrCreateAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+
 describe("de-party", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
@@ -63,7 +64,7 @@ describe("de-party", () => {
     const profile = await program.account.profile.fetch(profilePDA);
     console.log("Profile", profile);
   });
-  it("User creating party", async () => {
+  it("User creating party and joins it", async () => {
     //creating mint and token account for demonstration purposes
         const mint = await createMint(program.provider.connection,user,user.publicKey,null,6,mintKP);
         console.log(`Mint Address: ${mint.toBase58()}`); 
@@ -77,7 +78,7 @@ describe("de-party", () => {
         const ataBalance = await program.provider.connection.getTokenAccountBalance(ata.address);
         console.log(`Your ata balance: ${ataBalance.value.amount}`);
 
-        const tx = await program.methods.create("WIF WHALES", "Party for wif whales to build the social presence.", new BN(19981998),10).accountsPartial({
+        const tx1 = await program.methods.create("WIF WHALES", "Party for wif whales to build the social presence.", new BN(19981998),10).accountsPartial({
         party: partyPDA,
         mint: mint,
         tokenAccount: ata.address,
@@ -87,6 +88,12 @@ describe("de-party", () => {
       }).signers([user]).rpc();
       const party = await program.account.party.fetch(partyPDA);
       console.log('Party required tokens:', party.tokensRequired.toString());
+      const tx2 = await program.methods.join().accountsPartial({
+        party: partyPDA,
+        user: user.publicKey,
+        tokenAccount: ata.address,
+        profile: profilePDA
+      }).signers([user]).rpc();
     });
     it("Second user initializing profile and joining party", async () => {
       const joinerAirdrop = await program.provider.connection.requestAirdrop(
@@ -345,8 +352,8 @@ describe("de-party", () => {
         voter: joiner2.publicKey,
         config: configPDA
       }).signers([joiner2]).rpc();
-      const members_after = await program.account.party.fetch(partyPDA);
-      console.log("Members after kick", members_after.members);
+      const members = await program.account.party.fetch(partyPDA);
+      console.log("Members after kick", members.members);
     });
     
     it("User closing profile", async () => {

@@ -12,9 +12,10 @@ pub struct Poll {
     pub end_time: i64,
     pub target: Option<Pubkey>,
     pub bump: u8,
+    pub voted : Vec<Pubkey>,
 }
 
 
 impl Poll {
-    pub const LEN: usize = 8 + 32 + 32 + 1 + (32*4) + 1 + 1 + 8 + 8 + 1 ;
+    pub const LEN: usize = 8 + 32 + 32 + 1 + (32*4) + 1 + 1 + 8 + 8 + 1 + (32*10);
 }
