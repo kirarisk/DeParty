@@ -1,32 +1,28 @@
 use anchor_lang::prelude::*;
 use crate::states::{Party,Config};
 use anchor_spl::token::Mint;
+use ephemeral_rollups_sdk::anchor::commit;
+use ephemeral_rollups_sdk::ephem::commit_and_undelegate_accounts;
+use crate::PARTY_PDA_SEED;
+
+#[commit]
 #[derive(Accounts)]
 pub struct EndParty<'info> {
-    #[account(
-        mut,
-        close = treasury,
-        seeds = [b"party", party.key().as_ref(), mint.key().as_ref()],
-        bump = party.bump,
-    )]
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut, seeds = [PARTY_PDA_SEED], bump)]
     pub party: Account<'info, Party>,
-    pub mint: Account<'info, Mint>,
-
-    #[account(
-        mut,
-        seeds = [b"treasury"],
-        bump = config.treasury_bump,
-    )]
-    /// CHECK: This is the program's treasury account
-    pub treasury: SystemAccount<'info>,
-
-    pub config: Account<'info, Config>,
-
-    pub system_program: Program<'info, System>,
 }
 
+
 impl<'info> EndParty<'info> {
-    pub fn end_party(&mut self) -> Result<()> {
+    pub fn end_party(&self) -> Result<()> {
+        commit_and_undelegate_accounts(
+            &self.payer,
+            vec![&self.party.to_account_info()],
+            &self.magic_context,
+            &self.magic_program,
+        )?;
         Ok(())
     }
 }

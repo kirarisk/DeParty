@@ -22,5 +22,7 @@ pub enum CustomError {
     InvalidPollType,
     #[msg("Already voted")]
     AlreadyVoted,
+    #[msg("Unauthorized")]
+    Unauthorized,
 }
 

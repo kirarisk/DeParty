@@ -6,6 +6,7 @@ use crate::errors::CustomError;
 use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
 use ephemeral_rollups_sdk::cpi::{delegate_account, DelegateConfig};
 use ephemeral_rollups_sdk::ephem::{commit_accounts, commit_and_undelegate_accounts};
+use crate::PARTY_PDA_SEED;
 
 // #[delegate]
 #[derive(Accounts)]
@@ -23,7 +24,7 @@ pub struct CreateParty<'info> {
         // del,
         payer = user,
         space = Party::LEN,
-        seeds = [b"party", user.key().as_ref(), mint.key().as_ref()],
+        seeds = [PARTY_PDA_SEED,mint.key().as_ref(),user.key().as_ref()],
         bump,
     )]
     pub party: Account<'info, Party>,
@@ -79,7 +80,7 @@ impl<'info> CreateParty<'info> {
         });
         // self.delegate_party(
         //     &self.user,
-        //     &[b"party", self.user.key().as_ref(), self.mint.key().as_ref()],
+        //     &[PARTY_PDA_SEED],
         //     DelegateConfig::default(),
         // )?;
         Ok(())
