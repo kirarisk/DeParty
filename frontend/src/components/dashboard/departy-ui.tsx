@@ -458,7 +458,6 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
       question: pollType === 2 ? question : `Vote to ${pollType === 0 ? 'mute' : 'kick'} target member?`, 
       options: pollType === 2 ? options : ['Yes', 'No'], 
       targetProfile: targetPubKey,
-      isOnEr: isOnEr
     }).then(() => {
       setShowCreatePoll(false);
       setQuestion('')
