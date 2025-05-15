@@ -77,7 +77,8 @@ const CallRoomPollsWrapper = memo(function CallRoomPollsWrapper({
   );
 });
 
-const LiveKitCallRoom = () => {
+// Named function expression to fix react/display-name issue
+const LiveKitCallRoom = function LiveKitCallRoom() {
   const [showPolls, setShowPolls] = useState(false);
   const [tryToConnect, setTryToConnect] = useState(false);
   const [connected, setConnected] = useState(false);

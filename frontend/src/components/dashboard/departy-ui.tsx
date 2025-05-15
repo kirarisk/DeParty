@@ -650,12 +650,12 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
 }
 
 export function UserProfileCard({ publicKey }: { publicKey: PublicKey | null }) {
+  const { getProfile, closeAccount } = useDepartyProfile({ publicKey })
+
   if (!publicKey) {
     console.log("[UserProfileCard] Render: No publicKey, showing ProfileCreate directly");
     return <ProfileCreate />;
   }
-
-  const { getProfile, closeAccount } = useDepartyProfile({ publicKey })
 
   console.log("[UserProfileCard] Render with publicKey:", publicKey?.toString(), "Profile query state:", {
     isLoading: getProfile.isLoading,
