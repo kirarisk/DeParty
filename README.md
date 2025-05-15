@@ -4,6 +4,12 @@
 
 DeParty combines video conferencing with decentralized governance and token-gated access, powered by Solana and MagicBlock's Ephemeral Rollups technology for near-instant finality.
 
+## Live Demo
+
+The application is deployed and live at: [DeParty - The Hub for Degen Parties](https://departy.vercel.app/)
+
+Program ID on Devnet: ParTyJHHCxDHCZkeXBZTAtMQT1t1eospvjgYdpYQmHb
+
 ## Project Overview
 
 DeParty is a decentralized application that enables users to:
@@ -119,6 +125,13 @@ DeParty/
 ```
 
 ## Key Workflows
+
+## States Class Diagram
+![States Class Diagram](./states_class_diagram.png)
+
+
+## Instructions Diagram
+![Instructions Diagram](./instructions_diagram.png)
 
 ### Party Creation and Joining
 1. User connects their wallet and creates a profile
