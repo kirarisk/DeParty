@@ -1,25 +1,25 @@
 use anchor_lang::prelude::*;
-use crate::states::{Party,Config,Poll,Profile};
+use crate::states::{Config,Poll,Profile};
 use crate::errors::CustomError;
 
 
-
+// #[delegate]
 #[derive(Accounts)]
-#[instruction( poll_type: u8, question: String, options: Vec<String>)]
+#[instruction( poll_type: u8, question: String, options: Vec<String>, party: Pubkey,)]
 pub struct StartPoll<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    #[account(mut)]
-    pub party: Account<'info, Party>,
 
+
+    
     pub config: Account<'info, Config>,
 
     #[account(
         init,
         payer = user,
         space = Poll::LEN,
-        seeds = [b"poll", party.key().as_ref()],
+        seeds = [b"poll", party.as_ref(),user.key().as_ref()],
         bump,
     )]
     pub poll: Account<'info, Poll>,
@@ -33,14 +33,13 @@ pub struct StartPoll<'info> {
 }
 
 impl<'info> StartPoll<'info> {
-    pub fn start_poll(&mut self, poll_type: u8, question: String, options: Vec<String>, bumps: &StartPollBumps) -> Result<()> {
-        require!(self.party.members.contains(&self.profile.key()), CustomError::NotPartyMember);
+    pub fn start_poll(&mut self, poll_type: u8, question: String, options: Vec<String>,party: Pubkey, bumps: &StartPollBumps) -> Result<()> {
         
         match poll_type {
             // Mute a User
             0 => {
                 self.poll.set_inner(Poll {
-                    party: self.party.key(),
+                    party: party,
                     poll_question: format!("Mute {}?", self.target.as_ref().unwrap().name),
                     poll_type: poll_type,
                     options: vec!["Yes".to_string(), "No".to_string()],
@@ -48,6 +47,7 @@ impl<'info> StartPoll<'info> {
                     total_votes: 0,
                     start_time: Clock::get()?.unix_timestamp,
                     end_time: Clock::get()?.unix_timestamp + 1000,
+                    required_votes: 1,
                     bump: bumps.poll,
                     target: Some(self.target.as_ref().unwrap().key()),
                     voted: vec![],
@@ -56,7 +56,7 @@ impl<'info> StartPoll<'info> {
             // Kick a User
             1 => {
                 self.poll.set_inner(Poll {
-                    party: self.party.key(),
+                    party: party,
                     poll_question: format!("Kick {}?", self.target.as_ref().unwrap().name),
                     poll_type: poll_type,
                     options: vec!["Yes".to_string(), "No".to_string()],
@@ -67,12 +67,13 @@ impl<'info> StartPoll<'info> {
                     bump: bumps.poll,
                     target: Some(self.target.as_ref().unwrap().key()),
                     voted: vec![],
+                    required_votes: 1,
                 });
             }
             // Normal Poll
             2 => {
                 self.poll.set_inner(Poll {
-                    party: self.party.key(),
+                    party: party,
                     poll_question: question,
                     poll_type: poll_type,
                     options: options.clone(),
@@ -83,6 +84,7 @@ impl<'info> StartPoll<'info> {
                     target: None,
                     bump: bumps.poll,
                     voted: vec![],
+                    required_votes: 1,
                 });
             }
             _ => {

@@ -1,22 +1,20 @@
 use anchor_lang::prelude::*;
-use crate::states::Profile;
+use crate::states::Party;
 
 
 #[derive(Accounts)]
-pub struct Close<'info> {
+pub struct CloseParty<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(
         mut,
         close = user,
-        seeds = [b"profile",user.key().as_ref()],
-        bump = profile.bump
     )]
-    pub profile: Account<'info, Profile>,
+    pub party: Account<'info, Party>,
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Close<'info> {
+impl<'info> CloseParty<'info> {
     pub fn close(&mut self) -> Result<()> {
         Ok(())
     }

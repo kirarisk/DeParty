@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: linear-gradient(
+        to bottom right,
+        #1a2f23,
+        #164a2c,
+        #0d7a3d,
+        #00b341
+    );
+    text-align: center;
+    color: #eaffe0;
+}
+
+a {
+    color: #00ff41;
+    text-decoration: none;
+    text-align: center;
+    transition: color 0.3s ease;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+}
+
+a:hover {
+    color: #faff00;
+    text-decoration: underline;
+}
+
+.wallet-adapter-button-trigger {
+    background: linear-gradient(145deg, #00bf30, #00ff41) !important;
+    border: 2px solid rgba(255, 230, 0, 0.7) !important;
+    border-radius: 8px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    color: #000 !important;
+    box-shadow: 
+        0 4px 10px rgba(0, 255, 65, 0.4),
+        0 0 15px rgba(255, 230, 0, 0.3);
+    transition: all 0.3s ease !important;
+    outline: none !important;
+    font-weight: bold !important;
+    text-transform: uppercase;
+    transform: skew(-5deg);
+}
+
+.wallet-adapter-button-trigger:hover {
+    background: linear-gradient(145deg, #00ff41, #faff00) !important;
+    box-shadow: 
+        0 6px 15px rgba(0, 255, 65, 0.6),
+        0 0 20px rgba(255, 230, 0, 0.5);
+    transform: translateY(-2px) skew(-5deg) scale(1.05);
+}
+
+.wallet-adapter-dropdown-list,
+.wallet-adapter-button {
+    font-family: inherit !important;
+}
+
+/* Add degenerate meme coin style to all buttons */
+button {
+    background: linear-gradient(145deg, #00b341, #008c2d);
+    border: 2px solid rgba(255, 230, 0, 0.7);
+    color: #000;
+    padding: 10px 18px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 4px 10px rgba(0, 255, 65, 0.4),
+        0 0 15px rgba(255, 230, 0, 0.3);
+    outline: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transform: skew(-5deg);
+    position: relative;
+    overflow: hidden;
+}
+
+button:hover {
+    background: linear-gradient(145deg, #00ff41, #00b341);
+    box-shadow: 
+        0 6px 15px rgba(0, 255, 65, 0.6),
+        0 0 20px rgba(255, 230, 0, 0.5);
+    transform: translateY(-3px) skew(-5deg) scale(1.05);
+}
+
+/* Add meme coin elements */
+@keyframes rocket {
+    0% { transform: translateY(0) translateX(0) rotate(0); }
+    100% { transform: translateY(-500px) translateX(50px) rotate(20deg); }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+button:before {
+    content: '🚀';
+    position: absolute;
+    bottom: -30px;
+    left: -10px;
+    font-size: 24px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+button:hover:before {
+    opacity: 1;
+    animation: rocket 1.5s ease-in forwards;
+}
+
+/* Add moon reference */
+button:after {
+    content: 'TO THE MOON';
+    position: absolute;
+    font-size: 8px;
+    bottom: 3px;
+    right: 6px;
+    color: #faff00;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+button:hover:after {
+    opacity: 1;
+    animation: blink 1s infinite;
+}
+
+/* Add degen diamond hands effect */
+.diamond-hands::before {
+    content: '💎🙌';
+    position: absolute;
+    font-size: 20px;
+    opacity: 0;
+    transition: all 0.3s;
+}

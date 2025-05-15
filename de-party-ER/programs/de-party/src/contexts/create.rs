@@ -3,9 +3,8 @@ use anchor_spl::token::{Mint, TokenAccount};
 use crate::states::{Party,Config,Profile};
 use anchor_lang::solana_program::clock::Clock;
 use crate::errors::CustomError;
-use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
-use ephemeral_rollups_sdk::cpi::{delegate_account, DelegateConfig};
-use ephemeral_rollups_sdk::ephem::{commit_accounts, commit_and_undelegate_accounts};
+use ephemeral_rollups_sdk::anchor::delegate;
+use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use crate::PARTY_PDA_SEED;
 
 // #[delegate]

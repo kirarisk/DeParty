@@ -14,5 +14,5 @@ pub struct Party {
 }
 
 impl Party {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + (32 *10) + 8 + 32 + 8 + 1 +1;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + (32 *10)+ (32 * 2) + 8 + 32 + 8 + 1 +1;
 }

@@ -1,9 +1,10 @@
 use anchor_lang::prelude::*;
+use ephemeral_rollups_sdk::ephem::commit_accounts;
 use crate::states::{Poll, Config, Party, Profile};
 use crate::errors::CustomError;
+use ephemeral_rollups_sdk::anchor::commit;
 
-
-
+#[commit]
 #[derive(Accounts)]
 #[instruction(option_index: u8)]
 pub struct Vote<'info> {
@@ -14,9 +15,6 @@ pub struct Vote<'info> {
     pub config: Account<'info, Config>,
     #[account(mut)]
     pub party: Account<'info, Party>,
-    #[account(mut)]
-    /// CHECK: This is the program's treasury account
-    pub treasury: SystemAccount<'info>,
     #[account(
         seeds = [b"profile",voter.key().as_ref()],
         bump = profile.bump,
@@ -32,12 +30,13 @@ impl<'info> Vote<'info> {
         self.poll.voted.push(self.profile.key());
         self.poll.votes[option_index as usize]+=1;
         self.poll.total_votes+=1;
+        commit_accounts(&self.voter, vec![&self.poll.to_account_info()], &self.magic_context, &self.magic_program)?;
         let votes_required:u8 = (self.party.members.len() as f32 * (self.config.vote_consensus as f32 / 100.0)).ceil() as u8;
+        self.poll.required_votes = votes_required;
         match self.poll.poll_type {
             0 => {
                 if self.poll.votes[option_index as usize] >= votes_required {
                     msg!("Mute {}", self.poll.target.unwrap());
-                    self.poll.close(self.treasury.to_account_info())?;
                     Ok(())
                 } else {
                     Ok(())
@@ -56,22 +55,21 @@ impl<'info> Vote<'info> {
                         }
                         index += 1;
                     }
-                    self.poll.close(self.treasury.to_account_info())?;
                     Ok(())
                 } else {
                     Ok(())
                 }
             }
             2 => {
-                if self.poll.total_votes >= votes_required {
+                if self.poll.total_votes >= votes_required{
                     // let mut end_poll_ctx = EndPoll {
                     //     poll: self.poll.clone(),
                     //     treasury: self.treasury.clone(),
                     //     system_program: self.system_program.clone(),
                     // };
                     // end_poll_ctx.end_poll()?;
-                    self.poll.close(self.treasury.to_account_info())?;
                     Ok(())
+                    // Ok(())
                 } else {
                     Ok(())
                 }

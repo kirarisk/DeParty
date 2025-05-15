@@ -7,6 +7,7 @@ pub struct Poll {
     pub poll_type: u8,
     pub options: Vec<String>,
     pub votes: Vec<u8>,
+    pub required_votes: u8,
     pub total_votes: u8,
     pub start_time: i64,
     pub end_time: i64,

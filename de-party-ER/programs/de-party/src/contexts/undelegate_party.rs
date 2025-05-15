@@ -1,22 +1,20 @@
 use anchor_lang::prelude::*;
-use crate::states::{Party,Config};
-use anchor_spl::token::Mint;
+use crate::states::Party;
 use ephemeral_rollups_sdk::anchor::commit;
 use ephemeral_rollups_sdk::ephem::commit_and_undelegate_accounts;
-use crate::PARTY_PDA_SEED;
 
 #[commit]
 #[derive(Accounts)]
-pub struct EndParty<'info> {
+pub struct UndelegateParty<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(mut, seeds = [PARTY_PDA_SEED], bump)]
+    #[account(mut)]
     pub party: Account<'info, Party>,
 }
 
 
-impl<'info> EndParty<'info> {
-    pub fn end_party(&self) -> Result<()> {
+impl<'info> UndelegateParty<'info> {
+    pub fn undelegate_party(&self) -> Result<()> {
         commit_and_undelegate_accounts(
             &self.payer,
             vec![&self.party.to_account_info()],
