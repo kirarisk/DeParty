@@ -25,9 +25,9 @@ pub struct Vote<'info> {
 
 impl<'info> Vote<'info> {
     pub fn vote(&mut self, option_index: u8) -> Result<()> {
-        require!(self.poll.voted.iter().all(|voted| voted != &self.profile.key()), CustomError::AlreadyVoted);
-        require!(self.party.members.contains(&self.profile.key()), CustomError::NotPartyMember);
-        self.poll.voted.push(self.profile.key());
+        require!(self.poll.voted.iter().all(|voted| voted != &self.voter.key()), CustomError::AlreadyVoted);
+        require!(self.party.members.contains(&self.voter.key()), CustomError::NotPartyMember);
+        self.poll.voted.push(self.voter.key());
         self.poll.votes[option_index as usize]+=1;
         self.poll.total_votes+=1;
         commit_accounts(&self.voter, vec![&self.poll.to_account_info()], &self.magic_context, &self.magic_program)?;
@@ -37,6 +37,8 @@ impl<'info> Vote<'info> {
             0 => {
                 if self.poll.votes[option_index as usize] >= votes_required {
                     msg!("Mute {}", self.poll.target.unwrap());
+                    self.poll.end_time = Clock::get()?.unix_timestamp;
+                    self.poll.ended = true;
                     Ok(())
                 } else {
                     Ok(())
@@ -50,6 +52,8 @@ impl<'info> Vote<'info> {
                         msg!("Target: {}", self.poll.target.unwrap());
                         if member == &self.poll.target.unwrap() {
                             self.party.members.remove(index);
+                            self.poll.end_time = Clock::get()?.unix_timestamp;
+                            self.poll.ended = true;
                             msg!("Kicked member");
                             break;
                         }
@@ -68,6 +72,8 @@ impl<'info> Vote<'info> {
                     //     system_program: self.system_program.clone(),
                     // };
                     // end_poll_ctx.end_poll()?;
+                    self.poll.end_time = Clock::get()?.unix_timestamp;
+                    self.poll.ended = true;
                     Ok(())
                     // Ok(())
                 } else {

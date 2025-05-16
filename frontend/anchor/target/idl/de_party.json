@@ -1538,6 +1538,10 @@
             "type": {
               "vec": "pubkey"
             }
+          },
+          {
+            "name": "ended",
+            "type": "bool"
           }
         ]
       }
@@ -1547,6 +1551,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
           {
             "name": "name",
             "type": "string"

@@ -23,6 +23,7 @@ interface PollAccount {
   endTime: { toNumber: () => number };
   party: PublicKey;
   source: string;
+  ended: boolean;
 }
 
 export function CallRoomPolls({ 
@@ -539,6 +540,7 @@ export function CallRoomPolls({
                 {activePoll.pollType === 0 ? "Mute Poll" :
                  activePoll.pollType === 1 ? "Kick Poll" :
                  "General Poll"}
+                {activePoll.ended && " (Ended)"}
               </span>
               <span>Votes: {activePoll.totalVotes}</span>
             </div>
@@ -556,8 +558,8 @@ export function CallRoomPolls({
                 key={index} 
                 className={`flex items-center p-2 rounded-md border ${
                   selectedOption === index ? 'border-primary bg-primary/10' : 'border-gray-300'
-                } cursor-pointer hover:bg-base-200 transition-colors`}
-                onClick={() => !hasVoted() && setSelectedOption(index)}
+                } ${!activePoll.ended ? 'cursor-pointer hover:bg-base-200 transition-colors' : ''}`}
+                onClick={() => !hasVoted() && !activePoll.ended && setSelectedOption(index)}
               >
                 <input
                   type="radio"
@@ -565,10 +567,10 @@ export function CallRoomPolls({
                   name="poll-option"
                   checked={selectedOption === index}
                   onChange={() => setSelectedOption(index)}
-                  disabled={hasVoted()}
+                  disabled={hasVoted() || activePoll.ended}
                   className="mr-2 h-3 w-3"
                 />
-                <label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-sm">
+                <label htmlFor={`option-${index}`} className={`flex-1 ${!activePoll.ended ? 'cursor-pointer' : ''} text-sm`}>
                   {option}
                 </label>
                 <span className="text-xs bg-base-200 px-1 rounded">{activePoll.votes[index]}</span>
@@ -578,7 +580,7 @@ export function CallRoomPolls({
           
           <Button
             className="w-full h-8 text-sm"
-            disabled={vote.isPending || selectedOption === null || hasVoted() || isVoting}
+            disabled={vote.isPending || selectedOption === null || hasVoted() || isVoting || activePoll.ended}
             onClick={handleVote}
           >
             {isVoting ? 
@@ -589,7 +591,7 @@ export function CallRoomPolls({
                 </svg>
                 Voting...
               </span> 
-              : hasVoted() ? 'You voted' : 'Submit Vote'
+              : hasVoted() ? 'You voted' : activePoll.ended ? 'Poll Ended' : 'Submit Vote'
             }
           </Button>
         </div>

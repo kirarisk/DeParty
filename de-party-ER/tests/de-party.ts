@@ -29,13 +29,13 @@ describe("de-party", () => {
 
   const program = anchor.workspace.deParty as Program<DeParty>;
   const delegationProgram = new PublicKey("DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh");
-  let fartcoinPK = new PublicKey("");
+  // let fartcoinPK = new PublicKey("");
 
-  const admin = Keypair.fromSecretKey(bs58.decode(""))
-  const partyPDA = PublicKey.findProgramAddressSync(
-    [Buffer.from("party"),fartcoinPK.toBuffer(),admin.publicKey.toBuffer()],
-    program.programId
-  )[0];
+  const admin = Keypair.fromSecretKey(bs58.decode("5vLv2StvBtZP6DGKfrTLUDBVTuQg3jdRipWVqaYKcKvNt5f35je7KFTeLypRMdQW2vBmShwEAStVBax972u3jqz3"))
+  // const partyPDA = PublicKey.findProgramAddressSync(
+  //   [Buffer.from("party"),fartcoinPK.toBuffer(),admin.publicKey.toBuffer()],
+  //   program.programId
+  // )[0];
   const profilePDA = PublicKey.findProgramAddressSync(
     [Buffer.from("profile"),admin.publicKey.toBuffer()],
     program.programId
@@ -141,87 +141,87 @@ describe("de-party", () => {
 //   //   const profile = await program.account.profile.fetch(profilePDA);
 //   //   console.log("Profile", profile);
 //   // });
-  it("ER wallet creating party and delegates it to Ephemeral Rollup", async () => {
-    console.log("Party PDA: ", partyPDA.toString());
-    let fartcoinAta = await getOrCreateAssociatedTokenAccount(program.provider.connection, admin, fartcoinPK, admin.publicKey);
-    let tx = await program.methods
-    .create("FartCoin", "FartCoin party for OG farts to build the social presence.", new BN(10), 5)
-    .accountsPartial({
-      party: partyPDA,
-      mint: fartcoinPK,
-      tokenAccount: fartcoinAta.address,
-      user: admin.publicKey,
-      treasury: treasuryPDA,
-      profile: profilePDA
-    })
-    .signers([admin]).rpc();
-    let party = await program.account.party.fetch(partyPDA);
-    let tx2 = await program.methods.delegateParty(fartcoinPK,admin.publicKey).accountsPartial({
-      payer: admin.publicKey,
-      pda: partyPDA,
-    }).signers([admin]).rpc();
+  // it("ER wallet creating party and delegates it to Ephemeral Rollup", async () => {
+  //   console.log("Party PDA: ", partyPDA.toString());
+  //   let fartcoinAta = await getOrCreateAssociatedTokenAccount(program.provider.connection, admin, fartcoinPK, admin.publicKey);
+  //   let tx = await program.methods
+  //   .create("FartCoin", "FartCoin party for OG farts to build the social presence.", new BN(10), 5)
+  //   .accountsPartial({
+  //     party: partyPDA,
+  //     mint: fartcoinPK,
+  //     tokenAccount: fartcoinAta.address,
+  //     user: admin.publicKey,
+  //     treasury: treasuryPDA,
+  //     profile: profilePDA
+  //   })
+  //   .signers([admin]).rpc();
+  //   let party = await program.account.party.fetch(partyPDA);
+  //   let tx2 = await program.methods.delegateParty(fartcoinPK,admin.publicKey).accountsPartial({
+  //     payer: admin.publicKey,
+  //     pda: partyPDA,
+  //   }).signers([admin]).rpc();
 
-    console.log("Party created on Base Layer", party);
-  });
-  it("user joins the party", async () => {
-    const ata = await getOrCreateAssociatedTokenAccount(program.provider.connection, admin, fartcoinPK, admin.publicKey);
-    let tx = await program.methods.join().accountsPartial({
-      party: partyPDA,
-      user: admin.publicKey,
-      tokenAccount: ata.address,
-      profile: profilePDA
-    }).signers([admin]).transaction();
-    tx.feePayer = providerEphemeralRollup.wallet.publicKey;
-    tx.recentBlockhash = (
-      await providerEphemeralRollup.connection.getLatestBlockhash()
-    ).blockhash;
-    tx = await providerEphemeralRollup.wallet.signTransaction(tx);
-    const txHash = await providerEphemeralRollup.sendAndConfirm(tx);
-    console.log("User joined party");
-  });
-  it("User starting poll", async () => {
-    const question = "What is the best way to build a social presence?";
-    const options = ["Yes", "No"];
-    const pollType = 2;
-    const pollPDA = PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"),partyPDA.toBuffer(),admin.publicKey.toBuffer()],
-      program.programId
-    )[0];
-    const tx = await program.methods.startPoll(pollType, question, options, partyPDA).accountsPartial({
-      user: admin.publicKey,
-      config: configPDA,
-      poll: pollPDA,
-      profile: profilePDA,
-      target: null,
-    }).signers([admin]).rpc();
-    let tx2 = await program.methods.delegatePoll(partyPDA,admin.publicKey).accountsPartial({
-      payer: admin.publicKey,
-      pda: pollPDA,
-    }).signers([admin]).rpc();
-    console.log("Poll started");
-  });
-  it("First user voting", async () => {
-    console.log("Party PDA: ", partyPDA.toString());
-    const optionIndex = 0;
-    const pollPDA = PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"),partyPDA.toBuffer(),admin.publicKey.toBuffer()],
-      program.programId
-    )[0];
-    let tx = await program.methods.vote(optionIndex).accountsPartial({
-      party: partyPDA,
-      poll: pollPDA,
-      voter: admin.publicKey,
-      config: configPDA,
-      profile: profilePDA,
-    }).signers([admin]).transaction();
-    tx.feePayer = providerEphemeralRollup.wallet.publicKey;
-    tx.recentBlockhash = (
-      await providerEphemeralRollup.connection.getLatestBlockhash()
-    ).blockhash;
-    tx = await providerEphemeralRollup.wallet.signTransaction(tx);
-    const txHash = await providerEphemeralRollup.sendAndConfirm(tx);
-    console.log("Vote transaction submitted:", txHash);
-  });
+  //   console.log("Party created on Base Layer", party);
+  // });
+  // it("user joins the party", async () => {
+  //   const ata = await getOrCreateAssociatedTokenAccount(program.provider.connection, admin, fartcoinPK, admin.publicKey);
+  //   let tx = await program.methods.join().accountsPartial({
+  //     party: partyPDA,
+  //     user: admin.publicKey,
+  //     tokenAccount: ata.address,
+  //     profile: profilePDA
+  //   }).signers([admin]).transaction();
+  //   tx.feePayer = providerEphemeralRollup.wallet.publicKey;
+  //   tx.recentBlockhash = (
+  //     await providerEphemeralRollup.connection.getLatestBlockhash()
+  //   ).blockhash;
+  //   tx = await providerEphemeralRollup.wallet.signTransaction(tx);
+  //   const txHash = await providerEphemeralRollup.sendAndConfirm(tx);
+  //   console.log("User joined party");
+  // });
+  // it("User starting poll", async () => {
+  //   const question = "What is the best way to build a social presence?";
+  //   const options = ["Yes", "No"];
+  //   const pollType = 2;
+  //   const pollPDA = PublicKey.findProgramAddressSync(
+  //     [Buffer.from("poll"),partyPDA.toBuffer(),admin.publicKey.toBuffer()],
+  //     program.programId
+  //   )[0];
+  //   const tx = await program.methods.startPoll(pollType, question, options, partyPDA).accountsPartial({
+  //     user: admin.publicKey,
+  //     config: configPDA,
+  //     poll: pollPDA,
+  //     profile: profilePDA,
+  //     target: null,
+  //   }).signers([admin]).rpc();
+  //   let tx2 = await program.methods.delegatePoll(partyPDA,admin.publicKey).accountsPartial({
+  //     payer: admin.publicKey,
+  //     pda: pollPDA,
+  //   }).signers([admin]).rpc();
+  //   console.log("Poll started");
+  // });
+  // it("First user voting", async () => {
+  //   console.log("Party PDA: ", partyPDA.toString());
+  //   const optionIndex = 0;
+  //   const pollPDA = PublicKey.findProgramAddressSync(
+  //     [Buffer.from("poll"),partyPDA.toBuffer(),admin.publicKey.toBuffer()],
+  //     program.programId
+  //   )[0];
+  //   let tx = await program.methods.vote(optionIndex).accountsPartial({
+  //     party: partyPDA,
+  //     poll: pollPDA,
+  //     voter: admin.publicKey,
+  //     config: configPDA,
+  //     profile: profilePDA,
+  //   }).signers([admin]).transaction();
+  //   tx.feePayer = providerEphemeralRollup.wallet.publicKey;
+  //   tx.recentBlockhash = (
+  //     await providerEphemeralRollup.connection.getLatestBlockhash()
+  //   ).blockhash;
+  //   tx = await providerEphemeralRollup.wallet.signTransaction(tx);
+  //   const txHash = await providerEphemeralRollup.sendAndConfirm(tx);
+  //   console.log("Vote transaction submitted:", txHash);
+  // });
 //   //   it("Second user voting", async () => {
 //   //     const optionIndex = 0;
 //   //     const pollPDA = PublicKey.findProgramAddressSync(
@@ -364,12 +364,12 @@ describe("de-party", () => {
 //   //     console.log("Members after kick", members.members);
 //   //   });
     
-//   //   it("User closing profile", async () => {
-//   //     const tx = await program.methods.close().accountsPartial({
-//   //       profile: profilePDA,
-//   //       user: user.publicKey,
-//   //     }).signers([user]).rpc();
-//   //   });
+    it("User closing profile", async () => {
+      const tx = await program.methods.closeProfile().accountsPartial({
+        profile: profilePDA,
+        user: admin.publicKey,
+      }).signers([admin]).rpc();
+    });
 
   });
 

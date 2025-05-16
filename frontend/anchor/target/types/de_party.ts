@@ -1544,6 +1544,10 @@ export type DeParty = {
             "type": {
               "vec": "pubkey"
             }
+          },
+          {
+            "name": "ended",
+            "type": "bool"
           }
         ]
       }
@@ -1553,6 +1557,10 @@ export type DeParty = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
           {
             "name": "name",
             "type": "string"

@@ -14,6 +14,7 @@ pub struct Poll {
     pub target: Option<Pubkey>,
     pub bump: u8,
     pub voted : Vec<Pubkey>,
+    pub ended: bool,
 }
 
 

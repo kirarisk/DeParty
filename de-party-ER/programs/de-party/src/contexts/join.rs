@@ -26,8 +26,8 @@ impl<'info> Join<'info> {
     pub fn join(&mut self) -> Result<()> {
         require!(self.party.capacity > self.party.members.len() as u8, CustomError::PartyFull);
         require!(self.party.tokens_required <= self.token_account.amount, CustomError::InsufficientTokens);
-        if !self.party.members.contains(&self.profile.key()) {
-            self.party.members.push(self.profile.key());
+        if !self.party.members.contains(&self.user.key()) {
+            self.party.members.push(self.user.key());
         }
         commit_accounts(
             &self.user,

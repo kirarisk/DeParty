@@ -49,8 +49,9 @@ impl<'info> StartPoll<'info> {
                     end_time: Clock::get()?.unix_timestamp + 1000,
                     required_votes: 1,
                     bump: bumps.poll,
-                    target: Some(self.target.as_ref().unwrap().key()),
+                    target: Some(self.target.as_ref().unwrap().user),
                     voted: vec![],
+                    ended: false,
                 });
             }
             // Kick a User
@@ -65,9 +66,10 @@ impl<'info> StartPoll<'info> {
                     start_time: Clock::get()?.unix_timestamp,
                     end_time: Clock::get()?.unix_timestamp + 1000,
                     bump: bumps.poll,
-                    target: Some(self.target.as_ref().unwrap().key()),
+                    target: Some(self.target.as_ref().unwrap().user),
                     voted: vec![],
                     required_votes: 1,
+                    ended: false,
                 });
             }
             // Normal Poll
@@ -85,6 +87,7 @@ impl<'info> StartPoll<'info> {
                     bump: bumps.poll,
                     voted: vec![],
                     required_votes: 1,
+                    ended: false,
                 });
             }
             _ => {

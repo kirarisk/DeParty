@@ -642,13 +642,19 @@ export function useDepartyPolls() {
     }) => {
       if (!publicKey || !profilePda || !baseProgram || !configPda) 
         throw new Error('User, profile, base program or config pda not available for poll')
-      const [targetPDA] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("profile"),
-          params.targetProfile.toBuffer()
-        ],
-        baseProgram.programId
-      );
+      
+      // Only derive targetPDA if targetProfile is provided
+      let targetPDA: PublicKey | null = null;
+      if (params.targetProfile) {
+        [targetPDA] = PublicKey.findProgramAddressSync(
+          [
+            Buffer.from("profile"),
+            params.targetProfile.toBuffer()
+          ],
+          baseProgram.programId
+        );
+      }
+
       const [pollPda] = PublicKey.findProgramAddressSync(
         [
           Buffer.from("poll"),
@@ -670,7 +676,7 @@ export function useDepartyPolls() {
           config: configPda,
           poll: pollPda,
           profile: profilePda,
-          target: targetPDA || null
+          target: targetPDA
         })
         .rpc()
       

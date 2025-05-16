@@ -27,6 +27,7 @@ pub sysvar_clock: Sysvar<'info, Clock>,
 impl<'info> Initialize<'info> {
     pub fn init(&mut self, name:String,bumps: &InitializeBumps) -> Result<()> {
       self.profile.set_inner(Profile {
+        user: self.user.key(),
         name,
         points: 0,
         created_at: self.sysvar_clock.unix_timestamp as u64,
