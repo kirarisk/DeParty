@@ -68,16 +68,6 @@ export function CallRoomPolls({
     [cluster.network, partyAddress]
   );
   
-  // Log when pollQueryKey changes
-  useEffect(() => {
-    const paramsObject = pollQueryKey[2] as { cluster: any, partyAddress: PublicKey | null };
-    console.log("[CallRoomPolls] Poll query key updated:", {
-      key: pollQueryKey,
-      hasPartyAddress: !!paramsObject.partyAddress,
-      partyAddressStr: paramsObject.partyAddress ? paramsObject.partyAddress.toString() : 'not set'
-    });
-  }, [pollQueryKey]);
-  
   const { 
     data: activePollData, 
     isLoading: isActivePollLoading, 
@@ -86,18 +76,13 @@ export function CallRoomPolls({
   } = useQuery<PollAccount | null, Error>({
     queryKey: pollQueryKey,
     queryFn: async () => {
-      console.log("[CallRoomPolls] Fetching poll with direct query for party:", 
-        partyAddress ? partyAddress.toString() : 'undefined');
-        
       if (!publicKey || !partyAddress) {
-        console.log("[CallRoomPolls] No publicKey or partyAddress available");
         return null;
       }
       
       try {
         // Force an update to the query key in getActivePoll
-        console.log("[CallRoomPolls] Fetching directly using:", pollQueryKey);
-      
+        
         // Invalidate the query to ensure we get a fresh result
         queryClient.resetQueries({ queryKey: ['departy', 'active-poll'] });
         
@@ -110,12 +95,10 @@ export function CallRoomPolls({
         // This is the key part - manually call the getActivePoll function
         if (typeof getActivePoll.fetchStatus === 'undefined') {
           // If it's a function we can call directly
-          console.log("[CallRoomPolls] Attempting direct fetch using API");
           await getActivePoll.refetch();
           return getActivePoll.data;
         } else {
           // Otherwise use the query client
-          console.log("[CallRoomPolls] Using query client for fetch");
           await queryClient.refetchQueries({ queryKey: pollQueryKey });
           return queryClient.getQueryData(pollQueryKey);
         }
@@ -132,7 +115,6 @@ export function CallRoomPolls({
   // Update local state from query data
   useEffect(() => {
     if (activePollData) {
-      console.log("[CallRoomPolls] Setting active poll from query data:", activePollData);
       setActivePoll(activePollData);
     }
   }, [activePollData]);
@@ -140,26 +122,16 @@ export function CallRoomPolls({
   // Explicitly tell getActivePoll to use the current partyAddress
   useEffect(() => {
     if (partyAddress && publicKey) {
-      console.log("[CallRoomPolls] Setting up getActivePoll with party address:", partyAddress.toString());
-      
-      // Manually set the query key for getActivePoll
-      const correctKey = ['departy', 'active-poll', { 
-        cluster: cluster.network, 
-        partyAddress: partyAddress
-      }];
-      
       // Use invalidateQueries instead of removeQueries
       queryClient.invalidateQueries({ queryKey: ['departy', 'active-poll'] });
     }
-  }, [partyAddress, publicKey, queryClient, cluster.network]);
+  }, [partyAddress, publicKey, queryClient]);
 
-  // Function to directly fetch the poll data without using refetch
+  // Function to directly fetch the poll data without using refetch - memoize this to reduce rerenders
   const directFetchPoll = useCallback(async () => {
     if (!partyAddress || !publicKey) return null;
     
     try {
-      console.log("[CallRoomPolls] Directly fetching poll data for:", partyAddress.toString());
-      
       // Force the query client to remove any cached data - use invalidateQueries instead
       queryClient.invalidateQueries({ 
         queryKey: ['departy', 'active-poll']
@@ -167,11 +139,6 @@ export function CallRoomPolls({
       
       // Trigger a refetch - this should call getActivePoll.queryFn
       const refetchResult = await getActivePoll.refetch();
-      console.log("[CallRoomPolls] getActivePoll refetch result:", { 
-        status: refetchResult.status,
-        isSuccess: refetchResult.isSuccess,
-        hasData: !!refetchResult.data
-      });
       
       if (refetchResult.data) {
         // Cast to unknown first to satisfy TypeScript
@@ -188,32 +155,22 @@ export function CallRoomPolls({
   // Updated fetchActivePoll to use proper fetch methods
   const fetchActivePoll = useCallback(async () => {
     if (!partyAddress || !publicKey || !isMountedRef.current || isLoading) {
-      console.log("[CallRoomPolls] Manual refresh aborted:", { 
-        hasPartyAddress: !!partyAddress, 
-        hasPublicKey: !!publicKey, 
-        isMounted: isMountedRef.current,
-        isLoading
-      });
       return;
     }
     
-    console.log("[CallRoomPolls] Manually refreshing poll data for party:", partyAddress.toString());
     setIsLoading(true);
     
     try {
       // First approach: Try direct fetch using fetchPollForParty
-      console.log("[CallRoomPolls] Trying direct fetch with fetchPollForParty");
       const pollData = await fetchPollForParty(partyAddress, null);
       
       if (pollData) {
-        console.log("[CallRoomPolls] Direct fetch successful:", pollData);
         setActivePoll(pollData as PollAccount);
         setIsLoading(false);
         return;
       }
       
       // Second approach: Try refetch using the query system
-      console.log("[CallRoomPolls] Direct fetch failed, trying refetch");
       
       // Invalidate any existing queries first
       queryClient.invalidateQueries({ queryKey: ['departy', 'active-poll'] });
@@ -222,10 +179,7 @@ export function CallRoomPolls({
       const refetchResult = await getActivePoll.refetch();
       
       if (refetchResult.data) {
-        console.log("[CallRoomPolls] Refetch successful:", refetchResult.data);
         setActivePoll(refetchResult.data as unknown as PollAccount);
-      } else {
-        console.log("[CallRoomPolls] No poll data found");
       }
       
       setIsLoading(false);
@@ -244,8 +198,6 @@ export function CallRoomPolls({
     const doInitialFetch = async () => {
       if (initialFetchDoneRef.current || !partyAddress || !publicKey) return;
       
-      console.log("[CallRoomPolls] Doing initial fetch with party address:", partyAddress.toString());
-      
       // Mark that we've done the initial fetch to prevent repeat calls
       initialFetchDoneRef.current = true;
       
@@ -261,21 +213,21 @@ export function CallRoomPolls({
     };
   }, [partyAddress, publicKey, fetchActivePoll]);
   
-  // Manual refresh function that users can trigger
+  // Manual refresh function that users can trigger - memoized to reduce rerenders
   const manualRefresh = useCallback(() => {
     if (isLoading) {
-      console.log("[CallRoomPolls] Skipping manual refresh because already loading");
       return; // Prevent multiple simultaneous loads
     }
-    console.log("[CallRoomPolls] Manual refresh triggered by user");
     fetchActivePoll();
   }, [fetchActivePoll, isLoading]);
   
-  const hasVoted = useCallback(() => {
+  // Memoize this function to reduce rerenders
+  const hasVoted = useMemo(() => {
     if (!publicKey || !activePoll) return false;
     return activePoll.voted.some(voter => voter.equals(publicKey));
   }, [publicKey, activePoll]);
   
+  // Memoize this function to reduce rerenders
   const getMemberName = useCallback((pubkey: string) => {
     const member = members.find(m => m.publicKey.toString() === pubkey);
     return member ? member.name : pubkey.substring(0, 6) + '...';
@@ -344,7 +296,6 @@ export function CallRoomPolls({
     
     // Detect if poll is on ER from the source field
     const isOnErLayer = activePoll.source === 'er';
-    console.log("[CallRoomPolls] Voting on poll that is on:", isOnErLayer ? "ER" : "base layer");
     
     // Prepare vote data
     const voteData = {
@@ -396,7 +347,7 @@ export function CallRoomPolls({
               <span>↻</span>
             }
           </Button>
-          {isCreator && (
+          {publicKey && (
             <Button
               size="sm"
               variant={showCreatePoll ? "outline" : "default"}
@@ -409,7 +360,7 @@ export function CallRoomPolls({
         </div>
       </div>
       
-      {showCreatePoll && isCreator && (
+      {showCreatePoll && publicKey && (
         <div className="space-y-2 bg-base-300 p-3 mx-3 mb-3 rounded-md">
           <h4 className="font-medium text-sm">Create New Poll</h4>
           
@@ -559,7 +510,7 @@ export function CallRoomPolls({
                 className={`flex items-center p-2 rounded-md border ${
                   selectedOption === index ? 'border-primary bg-primary/10' : 'border-gray-300'
                 } ${!activePoll.ended ? 'cursor-pointer hover:bg-base-200 transition-colors' : ''}`}
-                onClick={() => !hasVoted() && !activePoll.ended && setSelectedOption(index)}
+                onClick={() => !hasVoted && !activePoll.ended && setSelectedOption(index)}
               >
                 <input
                   type="radio"
@@ -567,7 +518,7 @@ export function CallRoomPolls({
                   name="poll-option"
                   checked={selectedOption === index}
                   onChange={() => setSelectedOption(index)}
-                  disabled={hasVoted() || activePoll.ended}
+                  disabled={hasVoted || activePoll.ended}
                   className="mr-2 h-3 w-3"
                 />
                 <label htmlFor={`option-${index}`} className={`flex-1 ${!activePoll.ended ? 'cursor-pointer' : ''} text-sm`}>
@@ -580,7 +531,7 @@ export function CallRoomPolls({
           
           <Button
             className="w-full h-8 text-sm"
-            disabled={vote.isPending || selectedOption === null || hasVoted() || isVoting || activePoll.ended}
+            disabled={vote.isPending || selectedOption === null || hasVoted || isVoting || activePoll.ended}
             onClick={handleVote}
           >
             {isVoting ? 
@@ -591,7 +542,7 @@ export function CallRoomPolls({
                 </svg>
                 Voting...
               </span> 
-              : hasVoted() ? 'You voted' : activePoll.ended ? 'Poll Ended' : 'Submit Vote'
+              : hasVoted ? 'You voted' : activePoll.ended ? 'Poll Ended' : 'Submit Vote'
             }
           </Button>
         </div>

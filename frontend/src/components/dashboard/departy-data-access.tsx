@@ -151,27 +151,13 @@ export function useDepartyProfile({ publicKey }: { publicKey: PublicKey | null }
     queryKey,
     queryFn: () => {
       if (!profilePda || !baseProgram) throw new Error("Profile PDA or baseProgram is not available");
-      console.log(`[useDepartyProfile] Fetching profile for PDA: ${profilePda?.toString()}`);
       return baseProgram.account.profile.fetch(profilePda)
         .catch(error => {
-          console.log("[useDepartyProfile] Profile fetch error (likely doesn't exist yet):", error.message);
           return null;
         });
     },
     enabled: !!publicKey && !!profilePda && !!baseProgram,
   })
-
-  useEffect(() => {
-    console.log("[useDepartyProfile] getProfile status:", {
-      isLoading: getProfile.isLoading,
-      isFetching: getProfile.isFetching,
-      isError: getProfile.isError,
-      isSuccess: getProfile.isSuccess,
-      isFetched: getProfile.isFetched,
-      dataExists: !!getProfile.data,
-      error: getProfile.error
-    });
-  }, [getProfile.isLoading, getProfile.isFetching, getProfile.isError, getProfile.isSuccess, getProfile.isFetched, getProfile.data, getProfile.error]);
 
   const createProfile = useMutation({
     mutationKey: ['departy', 'create-profile', { cluster, publicKey }],
@@ -647,19 +633,18 @@ export function useDepartyPolls() {
       let targetPDA: PublicKey | null = null;
       if (params.targetProfile) {
         [targetPDA] = PublicKey.findProgramAddressSync(
-          [
-            Buffer.from("profile"),
-            params.targetProfile.toBuffer()
-          ],
-          baseProgram.programId
-        );
+        [
+          Buffer.from("profile"),
+          params.targetProfile.toBuffer()
+        ],
+        baseProgram.programId
+      );
       }
 
       const [pollPda] = PublicKey.findProgramAddressSync(
         [
           Buffer.from("poll"),
-          params.partyAddress.toBuffer(),
-          publicKey.toBuffer()
+          params.partyAddress.toBuffer()
         ],
         baseProgram.programId
       );
@@ -771,8 +756,7 @@ export function useDepartyPolls() {
           const [pollPda] = PublicKey.findProgramAddressSync(
             [
               Buffer.from("poll"),
-              params.partyAddress.toBuffer(),
-              publicKey.toBuffer()
+              params.partyAddress.toBuffer()
             ],
             baseProgram.programId
           );
@@ -794,8 +778,7 @@ export function useDepartyPolls() {
         const [pollPda] = PublicKey.findProgramAddressSync(
           [
             Buffer.from("poll"),
-            params.partyAddress.toBuffer(),
-            publicKey.toBuffer()
+            params.partyAddress.toBuffer()
           ],
           baseProgram.programId
         );
@@ -969,10 +952,7 @@ export function useDepartyPolls() {
 
   // Add this new function to explicitly fetch a poll with a specific partyAddress
   const fetchPollForParty = async (specificPartyAddress: PublicKey, queryClient: any) => {
-    console.log("[fetchPollForParty] Starting direct poll fetch for:", specificPartyAddress.toString());
-    
     if (!publicKey || !baseProgram) {
-      console.log("[fetchPollForParty] Missing publicKey or baseProgram");
       return null;
     }
     
@@ -980,31 +960,24 @@ export function useDepartyPolls() {
     const [pollPda] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("poll"),
-        specificPartyAddress.toBuffer(),
-        publicKey.toBuffer()
+        specificPartyAddress.toBuffer()
       ],
       baseProgram.programId
     );
-    
-    console.log("[fetchPollForParty] Will look for poll at PDA:", pollPda.toString());
     
     let result = null;
     
     // Try base layer first
     try {
-      console.log("[fetchPollForParty] Checking base layer...");
       const pollData = await baseProgram.account.poll.fetch(pollPda);
       result = { ...pollData, source: 'base' };
-      console.log("[fetchPollForParty] Found poll on base layer:", result);
     } catch (e) {
-      console.log("[fetchPollForParty] Poll not found on base layer, will try ER");
+      // Poll not found on base layer, will try ER
     }
     
     // Try ER if not found on base layer
     if (!result && baseProgram.idl) {
       try {
-        console.log("[fetchPollForParty] Creating delegation program for ER check");
-        
         const delegationProvider = new AnchorProvider(
           wallet.publicKey ? new SolanaConnection(ER_RPC_ENDPOINT) : baseProgram.provider.connection,
           wallet as any,
@@ -1017,15 +990,13 @@ export function useDepartyPolls() {
         );
         
         try {
-          console.log("[fetchPollForParty] Checking ER layer...");
           const pollData = await erProgram.account.poll.fetch(pollPda);
           result = { ...pollData, source: 'er' };
-          console.log("[fetchPollForParty] Found poll on ER layer:", result);
         } catch (e) {
-          console.log("[fetchPollForParty] Poll not found on ER layer either");
+          // Poll not found on ER layer either
         }
       } catch (e) {
-        console.error("[fetchPollForParty] Error setting up delegation program:", e);
+        // Error setting up delegation program
       }
     }
     
@@ -1037,20 +1008,7 @@ export function useDepartyPolls() {
     queryFn: async (context: QueryFunctionContext<[string, string, { cluster: Cluster, partyAddress: PublicKey | null}]>) => {
       const { partyAddress } = context.queryKey[2];
       
-      // Add debug output to see what's coming into this function when called
-      console.log("[getActivePoll] Function called with context:", {
-        queryKey: context.queryKey,
-        meta: context.meta,
-        hasPartyAddress: !!partyAddress,
-        partyAddressStr: partyAddress ? partyAddress.toString() : 'null'
-      });
-      
       if (!publicKey || !partyAddress || !baseProgram) {
-        console.log("[getActivePoll] Missing requirements:", { 
-          hasPublicKey: !!publicKey, 
-          hasPartyAddress: !!partyAddress,
-          hasBaseProgram: !!baseProgram 
-        });
         return null;
       }
       

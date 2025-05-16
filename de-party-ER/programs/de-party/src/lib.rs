@@ -47,8 +47,8 @@ pub mod de_party {
     pub fn withdraw_treasury(ctx: Context<WithdrawTreasury>, amount: u64)-> Result<()>{
         ctx.accounts.withdraw_treasury(amount)
     }
-    pub fn delegate_poll(ctx: Context<DelegatePoll>,party: Pubkey,user: Pubkey)-> Result<()>{
-        ctx.accounts.delegate(party,user)
+    pub fn delegate_poll(ctx: Context<DelegatePoll>,party: Pubkey)-> Result<()>{
+        ctx.accounts.delegate(party)
     }
     pub fn undelegate_party(ctx: Context<UndelegateParty>)-> Result<()>{
         ctx.accounts.undelegate_party()

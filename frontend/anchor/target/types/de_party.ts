@@ -936,10 +936,6 @@ export type DeParty = {
               {
                 "kind": "arg",
                 "path": "party"
-              },
-              {
-                "kind": "account",
-                "path": "user"
               }
             ]
           }

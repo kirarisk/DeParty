@@ -19,7 +19,7 @@ pub struct StartPoll<'info> {
         init,
         payer = user,
         space = Poll::LEN,
-        seeds = [b"poll", party.as_ref(),user.key().as_ref()],
+        seeds = [b"poll", party.as_ref()],
         bump,
     )]
     pub poll: Account<'info, Poll>,
@@ -47,7 +47,7 @@ impl<'info> StartPoll<'info> {
                     total_votes: 0,
                     start_time: Clock::get()?.unix_timestamp,
                     end_time: Clock::get()?.unix_timestamp + 1000,
-                    required_votes: 1,
+                    required_votes: 10,
                     bump: bumps.poll,
                     target: Some(self.target.as_ref().unwrap().user),
                     voted: vec![],
@@ -68,7 +68,7 @@ impl<'info> StartPoll<'info> {
                     bump: bumps.poll,
                     target: Some(self.target.as_ref().unwrap().user),
                     voted: vec![],
-                    required_votes: 1,
+                    required_votes: 10,
                     ended: false,
                 });
             }
@@ -86,7 +86,7 @@ impl<'info> StartPoll<'info> {
                     target: None,
                     bump: bumps.poll,
                     voted: vec![],
-                    required_votes: 1,
+                    required_votes: 10,
                     ended: false,
                 });
             }

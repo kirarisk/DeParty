@@ -930,10 +930,6 @@
               {
                 "kind": "arg",
                 "path": "party"
-              },
-              {
-                "kind": "account",
-                "path": "user"
               }
             ]
           }

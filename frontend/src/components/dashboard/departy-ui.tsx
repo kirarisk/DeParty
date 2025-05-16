@@ -1,7 +1,7 @@
 'use client'
 
 import { PublicKey } from '@solana/web3.js'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { ellipsify } from '../ui/ui-layout'
 import { ExplorerLink } from '../cluster/cluster-ui'
 import { useDepartyProgram, useDepartyProfile, useDepartyParty, useDepartyPolls } from './departy-data-access'
@@ -296,8 +296,8 @@ function PartyCard({
   endPartyMutation: any
 }) {
   const { publicKey } = useWallet()
-  const isOwner = publicKey && party && party.creator && party.creator.equals(publicKey)
-  const isMember = publicKey && party && party.members && party.members.some((member: PublicKey) => member.equals(publicKey!))
+  const isOwner = useMemo(() => publicKey && party && party.creator && party.creator.equals(publicKey), [publicKey, party]);
+  const isMember = useMemo(() => publicKey && party && party.members && party.members.some((member: PublicKey) => member.equals(publicKey!)), [publicKey, party]);
   const [isEndingParty, setIsEndingParty] = useState(false)
   const [showConfirmEnd, setShowConfirmEnd] = useState(false)
   
@@ -355,8 +355,15 @@ function PartyCard({
               {isJoining ? 'Joining...' : 'Join Party'}
             </Button>
           )}
-          {isMember && (
+          {isMember && publicKey && (
             <>
+              <Button
+                className="btn btn-primary btn-sm"
+                onClick={onJoin}
+                disabled={isJoining}
+              >
+                {isJoining ? 'Joining...' : 'Rejoin'}
+              </Button>
               <Button
                 className="btn btn-outline btn-sm"
                 onClick={() => setShowPolls(!showPolls)}
@@ -421,10 +428,15 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
   const [options, setOptions] = useState(['Yes', 'No'])
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [targetProfileAddress, setTargetProfileAddress] = useState('')
-  const isOnEr = source === 'er'
+  const isOnEr = useMemo(() => source === 'er', [source]);
 
-  const activePollQueryKey: [string, string, { cluster: any, partyAddress: PublicKey | null }] = 
-    ['departy', 'active-poll', { cluster: cluster.network, partyAddress }]
+  const activePollQueryKey = useMemo(() => 
+    ['departy', 'active-poll', { 
+      cluster: cluster.network, 
+      partyAddress 
+    }] as [string, string, { cluster: any, partyAddress: PublicKey | null }],
+    [cluster.network, partyAddress]
+  );
 
   const { data: activePollData, isLoading: isActivePollLoading, error: activePollError, refetch: refetchActivePoll } = 
     useQuery<PollAccount | null, Error>({
@@ -437,7 +449,7 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
     }
   );
   
-  const handleCreatePoll = () => {
+  const handleCreatePoll = useCallback(() => {
     if (!publicKey) return;
     let targetPubKey: PublicKey | null = null;
     if ((pollType === 0 || pollType === 1) && targetProfileAddress) {
@@ -465,9 +477,9 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
       setTargetProfileAddress('')
       refetchActivePoll(); 
     }).catch(err => toast.error("Failed to create poll: " + (err as Error).message));
-  }
+  }, [publicKey, pollType, question, options, targetProfileAddress, partyAddress, startPoll, refetchActivePoll]);
   
-  const handleVote = () => {
+  const handleVote = useCallback(() => {
     if (selectedOption === null) return;
     
     vote.mutateAsync({
@@ -477,13 +489,18 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
       setSelectedOption(null); 
       refetchActivePoll(); 
     }).catch(err => toast.error("Failed to vote: " + (err as Error).message));
-  }
+  }, [selectedOption, partyAddress, vote, refetchActivePoll]);
+  
+  const hasVoted = useMemo(() => {
+    if (!publicKey || !activePollData || !activePollData.voted) return false;
+    return activePollData.voted.find((voter: PublicKey) => voter.equals(publicKey)) !== undefined;
+  }, [publicKey, activePollData]);
   
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h4 className="text-lg font-bold">Polls</h4>
-        {partyCreator && (
+        {publicKey && (
             <Button
             className="btn btn-sm btn-outline"
             onClick={() => setShowCreatePoll(!showCreatePoll)}
@@ -493,7 +510,7 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
         )}
             </div>
 
-      {showCreatePoll && partyCreator && (
+      {showCreatePoll && publicKey && (
         <div className="card bg-base-300 p-4 rounded-lg">
           <h5 className="font-semibold mb-3 text-md">Create New Poll</h5>
           <div className="form-control mb-3">
@@ -619,7 +636,7 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
                   className="radio radio-primary radio-sm"
                   checked={selectedOption === index}
                   onChange={() => setSelectedOption(index)}
-                  disabled={!!(publicKey && activePollData.voted && activePollData.voted.find((voter: PublicKey) => voter.equals(publicKey)))}
+                  disabled={!!(publicKey && activePollData.voted && activePollData.voted.find((voter: PublicKey) => voter.equals(publicKey))) || hasVoted}
                 />
                 <label htmlFor={`option-${partyAddress.toString()}-${index}-${activePollData.startTime.toString()}`} className="flex-grow text-sm cursor-pointer">{option}</label>
                 {activePollData.votes && activePollData.votes[index] !== undefined && (
@@ -634,7 +651,7 @@ function PartyPolls({ partyAddress, partyCreator, source }: { partyAddress: Publ
               className="btn btn-primary btn-sm"
               onClick={handleVote}
               disabled={vote.isPending || selectedOption === null || 
-                !!(publicKey && activePollData.voted && activePollData.voted.find((voter: PublicKey) => voter.equals(publicKey)))
+                !!(publicKey && activePollData.voted && activePollData.voted.find((voter: PublicKey) => voter.equals(publicKey))) || hasVoted
               }
             >
               {vote.isPending ? 'Voting...' : (publicKey && activePollData.voted && activePollData.voted.find((voter: PublicKey) => voter.equals(publicKey))) ? 'Voted' : 'Submit Vote'}
@@ -653,24 +670,14 @@ export function UserProfileCard({ publicKey }: { publicKey: PublicKey | null }) 
   const { getProfile, closeAccount } = useDepartyProfile({ publicKey })
 
   if (!publicKey) {
-    console.log("[UserProfileCard] Render: No publicKey, showing ProfileCreate directly");
     return <ProfileCreate />;
   }
-
-  console.log("[UserProfileCard] Render with publicKey:", publicKey?.toString(), "Profile query state:", {
-    isLoading: getProfile.isLoading,
-    isError: getProfile.isError,
-    isFetched: getProfile.isFetched,
-    data: getProfile.data
-  });
   
   if (getProfile.isLoading) {
-    console.log("[UserProfileCard] Render: isLoading is true, showing spinner");
     return <div className="flex items-center justify-center p-6"><span className="loading loading-spinner loading-lg"></span><p className="ml-2">Loading profile...</p></div>
   }
   
   if (getProfile.data) {
-    console.log("[UserProfileCard] Render: getProfile.data exists, showing profile details", getProfile.data);
     return (
       <div className="card bg-base-200 shadow-lg mt-6">
         <div className="card-body">
@@ -684,7 +691,7 @@ export function UserProfileCard({ publicKey }: { publicKey: PublicKey | null }) 
               <div className="stat-title text-sm">Address</div>
               <div className="stat-value text-lg">{ellipsify(publicKey!.toString())}</div>
             </div>
-              </div>
+          </div>
 
           <div className="card-actions justify-end">
             <Button
@@ -695,12 +702,11 @@ export function UserProfileCard({ publicKey }: { publicKey: PublicKey | null }) 
               {closeAccount.isPending ? 'Closing Account...' : 'Close Account'}
             </Button>
           </div>
-                        </div>
-                        </div>
+        </div>
+      </div>
     )
   }
   
-  console.log("[UserProfileCard] Render: Fallback, showing ProfileCreate. isError:", getProfile.isError, "isFetched:", getProfile.isFetched, "!data:", !getProfile.data);
   return <ProfileCreate />;
 }
 

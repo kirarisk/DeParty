@@ -6,7 +6,7 @@ use crate::POLL_PDA_SEED;
 
 #[delegate]
 #[derive(Accounts)]
-#[instruction(party: Pubkey,user: Pubkey)]
+#[instruction(party: Pubkey)]
 pub struct DelegatePoll<'info> {
     pub payer: Signer<'info>,
     /// CHECK The pda to delegate
@@ -15,8 +15,8 @@ pub struct DelegatePoll<'info> {
 }
 
 impl<'info> DelegatePoll<'info> {
-    pub fn delegate(&self,party: Pubkey,user: Pubkey) -> Result<()> {
-        let seeds = [POLL_PDA_SEED,party.as_ref(),user.as_ref()];
+    pub fn delegate(&self,party: Pubkey) -> Result<()> {
+        let seeds = [POLL_PDA_SEED,party.as_ref()];
         self.delegate_pda(&self.payer, &seeds, DelegateConfig::default())?;
         Ok(())
     }
