@@ -691,7 +691,7 @@ export function UserProfileCard({ publicKey }: { publicKey: PublicKey | null }) 
               <div className="stat-title text-sm">Address</div>
               <div className="stat-value text-lg">{ellipsify(publicKey!.toString())}</div>
             </div>
-          </div>
+              </div>
 
           <div className="card-actions justify-end">
             <Button
@@ -702,8 +702,8 @@ export function UserProfileCard({ publicKey }: { publicKey: PublicKey | null }) 
               {closeAccount.isPending ? 'Closing Account...' : 'Close Account'}
             </Button>
           </div>
-        </div>
-      </div>
+                        </div>
+                        </div>
     )
   }
   

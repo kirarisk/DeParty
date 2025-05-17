@@ -9,6 +9,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import toast from 'react-hot-toast';
 import { useCluster } from '../cluster/cluster-data-access';
 import { useQuery, QueryClient, useQueryClient } from '@tanstack/react-query';
+import { handleMutePollSuccess, getRoomNameFromUrl } from './livekit-utils';
 
 // Define a basic type for Poll account data based on usage
 interface PollAccount {
@@ -306,10 +307,59 @@ export function CallRoomPolls({
     };
     
     try {
-      await vote.mutateAsync(voteData);
+      const result = await vote.mutateAsync(voteData);
       
       toast.dismiss("submit-vote");
       toast.success("Vote submitted successfully!");
+      
+      // Check if this was a mute poll and if poll has reached threshold
+      // We'll do this by checking if the vote result includes a closePollSignature
+      // which indicates the poll reached its threshold and was closed
+      if (result && typeof result !== 'string' && result.closePollSignature && activePoll.pollType === 0 && activePoll.target) {
+        // This was a successful mute poll vote that reached threshold
+        try {
+          // Find the member who was targeted by the poll
+          const targetMember = members.find(m => m.publicKey.toString() === activePoll.target?.toString());
+          
+          if (targetMember) {
+            // Try to mute the target member using our utility function
+            toast.loading(`Muting ${targetMember.name || targetMember.publicKey.toString().substring(0, 8)}...`, { id: "muting-user" });
+            
+            // Get the room name from URL
+            const roomName = getRoomNameFromUrl();
+            
+            if (roomName) {
+              try {
+                // Get a track ID from recent events if possible
+                const recentTrackEvents = (window as any).recentLiveKitEvents || [];
+                const targetUserTrackEvent = recentTrackEvents.find((event: any) => 
+                  event?.participant === targetMember.publicKey.toString() && 
+                  event?.event === 'trackPublished' &&
+                  event?.args?.[0]?.kind === 'audio'
+                );
+                
+                // Execute the mute operation, passing track ID if found
+                await handleMutePollSuccess(
+                  targetMember.publicKey.toString(),
+                  targetMember.name,
+                  targetUserTrackEvent?.args?.[0]?.trackSid
+                );
+                
+                toast.dismiss("muting-user");
+                toast.success(`Successfully muted ${targetMember.name || targetMember.publicKey.toString().substring(0, 8)}`);
+              } catch (error) {
+                toast.dismiss("muting-user");
+                toast.error(`Error muting participant: ${error instanceof Error ? error.message : String(error)}`);
+              }
+            } else {
+              toast.dismiss("muting-user");
+              toast.error("Could not determine room name for muting participant");
+            }
+          }
+        } catch (err) {
+          console.error("Error handling mute after successful poll:", err);
+        }
+      }
       
       setSelectedOption(null);
       
@@ -323,7 +373,7 @@ export function CallRoomPolls({
       toast.error(`Failed to vote: ${(err as Error).message}`);
       setIsVoting(false);
     }
-  }, [selectedOption, activePoll, partyAddress, vote, isVoting, fetchActivePoll]);
+  }, [selectedOption, activePoll, partyAddress, vote, isVoting, fetchActivePoll, members]);
 
   // Optimize rendering - don't show until we have minimal data loaded
   if (!publicKey || !partyAddress) {
