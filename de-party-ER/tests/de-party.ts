@@ -31,7 +31,7 @@ describe("de-party", () => {
   const delegationProgram = new PublicKey("DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh");
   // let fartcoinPK = new PublicKey("");
 
-  const admin = Keypair.fromSecretKey(bs58.decode("5vLv2StvBtZP6DGKfrTLUDBVTuQg3jdRipWVqaYKcKvNt5f35je7KFTeLypRMdQW2vBmShwEAStVBax972u3jqz3"))
+  const admin = Keypair.fromSecretKey(bs58.decode(""))
   // const partyPDA = PublicKey.findProgramAddressSync(
   //   [Buffer.from("party"),fartcoinPK.toBuffer(),admin.publicKey.toBuffer()],
   //   program.programId
