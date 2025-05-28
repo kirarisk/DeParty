@@ -8,6 +8,8 @@ DeParty combines video conferencing with decentralized governance and token-gate
 
 The application is deployed and live at: [DeParty - The Hub for Degen Parties](https://departy.vercel.app/)
 
+Video preview of the protocol: [Demo](https://x.com/kira_risk/status/1923594195404496914)
+
 Program ID on Devnet: ParTyJHHCxDHCZkeXBZTAtMQT1t1eospvjgYdpYQmHb
 
 ## Project Overview
